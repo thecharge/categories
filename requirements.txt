@@ -1,0 +1,12 @@
+Django>=6.0
+djangorestframework
+# Production WSGI Server
+gunicorn            
+psycopg2-binary
+django-environ
+networkx
+# Testing
+pytest
+pytest-django
+# For generating test data
+factory-boy
