@@ -6,7 +6,7 @@
 docker-compose run --rm web django-admin startproject core .
 ```
 
-1. Now creating the specific app for our logic called categories:
+2. Now creating the specific app for our logic called categories:
 
 ```shell
 docker-compose run --rm web python manage.py startapp categories
