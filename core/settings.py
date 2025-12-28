@@ -47,7 +47,20 @@ INSTALLED_APPS = [
     'rest_framework',
     # Local
     'categories',
+    # documentation
+    'drf_spectacular',
 ]
+
+# add default schema class fo rthe documentation 
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Category Tree API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

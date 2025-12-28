@@ -1,57 +1,43 @@
-from django.core.management.base import BaseCommand
-from categories.models import Category
 import networkx as nx
+import time
+from django.core.management.base import BaseCommand
+from django.db import connection
+from categories.models import Category
 
 class Command(BaseCommand):
-    help = 'Analyzes Rabbit Islands and Holes'
-
     def handle(self, *args, **options):
-        self.stdout.write("Fetching Graph Data...")
-        
-        # 1. Fetch Edges directly from the Through table (Fastest)
-        ThroughModel = Category.similar_categories.through
-        links = ThroughModel.objects.values_list('from_category_id', 'to_category_id')
-        
-        # 2. Build Graph using NetworkX
-        G = nx.Graph()
-        G.add_edges_from(links)
-        
-        # Add all IDs (even those with no connections)
-        all_ids = Category.objects.values_list('id', flat=True)
-        G.add_nodes_from(all_ids)
+        start_time = time.time()
 
-        self.stdout.write(f"Graph Built: {G.number_of_nodes()} categories.")
+        # 1. Load Graph (Streamed)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT from_category_id, to_category_id FROM categories_category_similar_categories")
+            G = nx.from_edgelist(cursor.fetchall())
 
-        # 3. Analyze Islands (Connected Components)
+        # 2. Identify Islands
         islands = list(nx.connected_components(G))
-        self.stdout.write(self.style.SUCCESS(f"Found {len(islands)} Rabbit Islands."))
+        self.stdout.write(f"Islands: {len(islands)}")
 
-        # 4. Find Longest Rabbit Hole (Diameter)
-        max_len = 0
-        longest_path = []
+        # 3. Find the Longest Rabbit Hole
+        if islands:
+            largest_island = max(islands, key=len)
+            S = G.subgraph(largest_island)
+            
+            # 2-Pass BFS (Extreme point to extreme point)
+            # This is O(V+E) - lightning fast even for huge graphs
+            source_node = list(largest_island)[0]
+            
+            # Pass 1: Find node u furthest from a random point
+            u = max(nx.single_source_shortest_path_length(S, source_node).items(), key=lambda x: x[1])[0]
+            
+            # Pass 2: Find node v furthest from u
+            distances = nx.single_source_shortest_path_length(S, u)
+            v, max_dist = max(distances.items(), key=lambda x: x[1])
+            
+            path = nx.shortest_path(S, source=u, target=v)
+            
+            # Resolve names for output
+            names = Category.objects.in_bulk(path)
+            path_names = [names[nid].name for nid in path]
 
-        # Iterate through every island to find the longest path within it
-        for island in islands:
-            if len(island) < 2: continue
-            
-            subgraph = G.subgraph(island)
-            
-            # Calculate shortest path between ALL pairs in this island
-            # Then find the longest of those shortest paths
-            try:
-                paths = dict(nx.all_pairs_shortest_path(subgraph))
-                for src, targets in paths.items():
-                    for dest, path in targets.items():
-                        if len(path) > max_len:
-                            max_len = len(path)
-                            longest_path = path
-            except Exception:
-                pass
-
-        if longest_path:
-            # Fetch names for the output
-            cats = Category.objects.in_bulk(longest_path)
-            names = [cats[uid].name for uid in longest_path if uid in cats]
-            
-            self.stdout.write(self.style.WARNING(f"\nLongest Rabbit Hole ({max_len-1} hops):"))
-            self.stdout.write(" -> ".join(names))
+            self.stdout.write(self.style.SUCCESS(f"\nLongest Rabbit Hole found in {time.time() - start_time:.2f}s"))
+            self.stdout.write(f"Hole: {' -> '.join(path_names)} ({max_dist} steps)")

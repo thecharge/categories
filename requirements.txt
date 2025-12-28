@@ -1,5 +1,8 @@
+# Warning - for prod remove the testing and tests
 Django>=6.0
 djangorestframework
+# Documentation 
+drf-spectacular
 # Production WSGI Server
 gunicorn            
 psycopg2-binary
@@ -10,3 +13,4 @@ pytest
 pytest-django
 # For generating test data
 factory-boy
+Pillow
