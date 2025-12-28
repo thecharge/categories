@@ -21,15 +21,9 @@ So you can later observe the app
 
 ```shell
 docker-compose down
+docker system prune --all --volumes
 docker-compose up --build -d
 docker-compose exec web python manage.py createsuperuser # then create the user
 docker-compose exec web pytest # check test
 docker-compose exec web python manage.py analyze_rabbits # analyze
-```
-
-## Clear local env
-
-```shell
-docker-compose down
-docker system prune --all --volumes
 ```
