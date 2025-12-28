@@ -16,7 +16,7 @@ services:
     build: .
     # command: /app/scripts/entrypoint.sh
     volumes:
-      - ./staticfiles:/app/staticfiles
+      - .:/app
     expose:
       - "8000" # Only exposed internally to Nginx
     environment:
