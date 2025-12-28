@@ -24,6 +24,7 @@ docker-compose down
 docker system prune --all --volumes
 docker-compose up --build -d
 docker-compose exec web python manage.py createsuperuser # then create the user
+docker-compose run --rm --entrypoint="" web python manage.py makemigrations
 docker-compose exec web pytest # check test
 docker-compose exec web python manage.py analyze_rabbits # analyze
 ```
