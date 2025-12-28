@@ -35,5 +35,6 @@ services:
       - "80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./static_files:/app/staticfiles
     depends_on:
       - web
