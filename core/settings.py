@@ -30,7 +30,9 @@ SECRET_KEY = env('SECRET_KEY', default='unsafe-secret-keydjango-insecure-9%xi-8f
 DEBUG = env.bool('DEBUG', default=True)
 
 # for now
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*', 'django', 'localhost', 'web', '127.0.0.1']
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1",  "http://django",  "http://web"]
 
 # Application definition
 

@@ -24,7 +24,7 @@ services:
       - DATABASE_URL=postgres://user:password@db:5432/main_db
       - SECRET_KEY=prod-secret
       - DEBUG=0
-      - ALLOWED_HOSTS=localhost,127.0.0.1,web
+      - ALLOWED_HOSTS=localhost,127.0.0.1,web,django
     depends_on:
       db:
         condition: service_healthy
