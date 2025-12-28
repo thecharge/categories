@@ -7,17 +7,16 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d main_db"]
       interval: 5s
 
   web:
     build: .
-    command: /app/scripts/entrypoint.sh
+    # command: /app/scripts/entrypoint.sh
     volumes:
-      - .:/app
-      - static_volume:/app/staticfiles
+      - ./staticfiles:/app/staticfiles
     expose:
       - "8000" # Only exposed internally to Nginx
     environment:
@@ -35,10 +34,5 @@ services:
       - "80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - static_volume:/app/staticfiles # Share static files
     depends_on:
       - web
-
-volumes:
-  postgres_data:
-  static_volume:
