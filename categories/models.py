@@ -3,21 +3,18 @@ from django.db import models
 class Category(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     description = models.TextField(blank=True, null=True)
-    image = models.CharField(max_length=255, blank=True, null=True)
+    image = models.ImageField(upload_to='categories/', blank=True, null=True)
     
-    # 1. Tree Structure (Adjacency List)
-    # A category links to its parent. If parent is null, it's a root.
+    # Tree: Adjacency list
     parent = models.ForeignKey(
         'self', 
-        on_delete=models.SET_NULL, 
+        on_delete=models.CASCADE, 
         null=True, 
         blank=True, 
-        related_name='children',
-        db_index=True  # Important for tree queries
+        related_name='children'
     )
 
-    # 2. Similarity (Graph)
-    # 'symmetrical=True' means if A is similar to B, Django sees B as similar to A.
+    # Similarity: Symmetrical M2M
     similar_categories = models.ManyToManyField(
         'self', 
         blank=True, 

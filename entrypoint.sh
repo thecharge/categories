@@ -18,4 +18,9 @@ python manage.py collectstatic --noinput
 # -w 4: 4 Worker processes (Optimized for standard 2-core cloud instances)
 # -b: Bind address
 echo "Starting Gunicorn..."
-exec gunicorn core.wsgi:application -w 4 -b 0.0.0.0:8000
+
+# Start Gunicorn with a timeout that matches Nginx
+exec gunicorn core.wsgi:application \
+    --workers 4 \
+    --timeout 10 \
+    --bind 0.0.0.0:8000

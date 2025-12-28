@@ -1,5 +1,5 @@
 # Using slim as a lightweight Python Linux image
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 # Set environment variables (prevents python from writing .pyc files)
 ENV PYTHONDONTWRITEBYTECODE=1
