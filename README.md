@@ -3,7 +3,9 @@
 ## Build and run
 
 First relay the `http://django` to `127.0.0.1` in your `hosts` file
-for windows check [here](https://learn.microsoft.com/en-us/windows/powertoys/hosts-file-editor) 
+
+For windows check [here](https://learn.microsoft.com/en-us/windows/powertoys/hosts-file-editor) 
+
 For Mac/Unix/Linux [here](https://gist.github.com/andreipa/47ce0679d1905883c18b9ac3a1a9a8f6)
 
 So you can later observe the app
