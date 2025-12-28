@@ -1,3 +1,6 @@
+# Licensed under MIT. 
+# Dependencies (Django REST Framework) are subject to their respective licenses.
+
 # Categories
 
 ## Build and run
