@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div style="padding: 20px;">
+    <h1>Category Hierarchy</h1>
+    <ul id="tree-root"></ul>
+</div>
+
+<script>
+    const data = {{ categories|safe }};
+    const map = {};
+    data.forEach(n => map[n.id] = {...n, children: []});
+    
+    const roots = [];
+    data.forEach(n => {
+        if(n.parent_id && map[n.parent_id]) {
+            map[n.parent_id].children.push(map[n.id]);
+        } else {
+            roots.push(map[n.id]);
+        }
+    });
+
+    function renderNode(node) {
+        let html = `<li><a href="/admin/categories/category/${node.id}/change/">${node.name}</a>`;
+        if (node.children.length > 0) {
+            html += `<ul>${node.children.map(renderNode).join('')}</ul>`;
+        }
+        html += `</li>`;
+        return html;
+    }
+
+    document.getElementById('tree-root').innerHTML = roots.map(renderNode).join('');
+</script>
+{% endblock %}

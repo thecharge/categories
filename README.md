@@ -1,15 +1,18 @@
-# Licensed under MIT. 
-# Dependencies (Django REST Framework) are subject to their respective licenses.
+# Licensed under MIT.
 
-# Categories
+## Third-Party Notices
+
+This project uses the following open-source software:
+
+### Django REST Framework
+
+### Other Dependencies (Django REST Framework for exaple) are subject to their respective licenses.
 
 ## Build and run
 
 First relay the `http://django` to `127.0.0.1` in your `hosts` file
-
-For windows check [here](https://learn.microsoft.com/en-us/windows/powertoys/hosts-file-editor) 
-
-For Mac/Unix/Linux [here](https://gist.github.com/andreipa/47ce0679d1905883c18b9ac3a1a9a8f6)
+[Changing hosts file in windows](https://learn.microsoft.com/en-us/windows/powertoys/hosts-file-editor)
+[Changing hosts file in linux/mac](https://gist.github.com/andreipa/47ce0679d1905883c18b9ac3a1a9a8f6)
 
 So you can later observe the app
 
@@ -19,7 +22,7 @@ docker-compose down
 docker system prune --all --volumes
 
 # build and detach , if it fails you may need to run i twice - cold start sometimes messes up the pgsql
-docker-compose up --build -d 
+docker-compose up --build -d --force-recreate --remove-orphans
 
 # only first time create super user:
 docker-compose exec web python manage.py createsuperuser # then create the user
@@ -36,7 +39,7 @@ docker-compose exec web python manage.py clear_categories
 docker-compose exec web python manage.py stress_test_rabbits
 
 # when needed execute the analyze script
-docker-compose exec web python manage.py analyze_rabbits # analyze
+docker-compose exec web python manage.py analyze_rabbits
 
 
 # clear the database

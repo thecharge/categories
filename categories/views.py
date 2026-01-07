@@ -1,10 +1,16 @@
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import serializers, viewsets, status, decorators
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from rest_framework import serializers, viewsets, status, decorators
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from django.shortcuts import get_object_or_404
 from .models import Category
 from .serializers import CategoryDetailSerializer, CategorySerializer
 from rest_framework.pagination import PageNumberPagination
+
+from django.shortcuts import render
+from django.contrib.admin.views.decorators import staff_member_required
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 50
@@ -31,15 +37,42 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Category.objects.all().order_by('id')
 
     @extend_schema(summary="Get the full arbitrarily deep category tree")
+    def get_serializer_class(self):
+        queryset = Category.objects.select_related('parent').all().order_by('id')
+        # serializer_class = CategorySerializer # no need for now as it will overflow
+   
+        if self.action == 'retrieve':
+            # Use the one that includes counts/details
+            return CategoryDetailSerializer
+        # Use the slim one for 'list', 'create', 'update', etc.
+        return CategorySerializer
+
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        # Optimization: Only load similarity IDs for the detail view
+        # to avoid massive joins on the list view.
+        if self.action == 'retrieve':
+            return Category.objects.prefetch_related('similar_categories')
+        return Category.objects.all().order_by('id')
+
+    @extend_schema(summary="Get the full arbitrarily deep category tree")
     @decorators.action(detail=False, methods=['get'])
     def tree(self, request):
         """
         High-performance tree assembly. 
         Bypasses DRF Serializers to avoid Recursion 500s.
+        High-performance tree assembly. 
+        Bypasses DRF Serializers to avoid Recursion 500s.
         """
         # 1. Fetch data leanly (No similarity prefetching here!)
         queryset = Category.objects.all().values('id', 'name', 'parent_id', 'description', 'image')
+        # 1. Fetch data leanly (No similarity prefetching here!)
+        queryset = Category.objects.all().values('id', 'name', 'parent_id', 'description', 'image')
         
+        # 2. Create a lookup map
+        # We use a dict for O(1) access
+        nodes = {item['id']: {**item, 'children': []} for item in queryset}
         # 2. Create a lookup map
         # We use a dict for O(1) access
         nodes = {item['id']: {**item, 'children': []} for item in queryset}
@@ -49,7 +82,20 @@ class CategoryViewSet(viewsets.ModelViewSet):
             parent_id = node['parent_id']
             if parent_id is None:
                 roots.append(node)
+        for item_id, node in nodes.items():
+            parent_id = node['parent_id']
+            if parent_id is None:
+                roots.append(node)
             else:
+                # If the parent exists in our map, attach this node as a child
+                if parent_id in nodes:
+                    # Circular dependency guard: don't attach if it creates a loop
+                    if parent_id != item_id:
+                        nodes[parent_id]['children'].append(node)
+                else:
+                    # Parent ID exists but node doesn't (Orphan), treat as root
+                    roots.append(node)
+
                 # If the parent exists in our map, attach this node as a child
                 if parent_id in nodes:
                     # Circular dependency guard: don't attach if it creates a loop
@@ -69,11 +115,22 @@ class CategoryViewSet(viewsets.ModelViewSet):
         ),
         responses={200: CategorySerializer}
     )
+
     @decorators.action(detail=True, methods=['patch'])
     def move(self, request, pk=None):
         category = self.get_object()
-        category.parent_id = request.data.get('parent_id')
-        category.save()
+        new_parent_id = request.data.get('parent_id')
+
+        # If it's already there, do nothing (Idempotent)
+        if category.parent_id == new_parent_id:
+            return Response(CategorySerializer(category).data)
+
+        try:
+            category.parent_id = new_parent_id
+            category.save() # This triggers the clean() method we added above
+        except ValidationError as e:
+            return Response({"error": e.message}, status=400)
+
         return Response(CategorySerializer(category).data)
 
     @extend_schema(
@@ -105,3 +162,14 @@ class CategoryViewSet(viewsets.ModelViewSet):
         if request.method == 'DELETE':
             category.similar_categories.remove(target)
             return Response({"status": "unlinked"}, status=status.HTTP_204_NO_CONTENT)
+
+
+# A special "Admin-like" view to see the diagram
+@staff_member_required
+def admin_tree_view(request):
+    """
+    Renders a D3.js or simple HTML list of the hierarchy
+    """
+    # Optimized fetch of just the structure
+    categories = Category.objects.all().values('id', 'name', 'parent_id')
+    return render(request, 'admin/category_tree.html', {'categories': list(categories)})
