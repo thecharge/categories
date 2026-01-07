@@ -1,4 +1,12 @@
-# Categories
+# Licensed under MIT.
+
+## Third-Party Notices
+
+This project uses the following open-source software:
+
+### Django REST Framework
+
+### Other Dependencies (Django REST Framework for exaple) are subject to their respective licenses.
 
 ## Build and run
 
@@ -31,7 +39,7 @@ docker-compose exec web python manage.py clear_categories
 docker-compose exec web python manage.py stress_test_rabbits
 
 # when needed execute the analyze script
-docker-compose exec web python manage.py analyze_rabbits # analyze
+docker-compose exec web python manage.py analyze_rabbits
 
 
 # clear the database

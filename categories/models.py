@@ -12,7 +12,7 @@ class Category(models.Model):
         on_delete=models.CASCADE, 
         null=True, 
         blank=True, 
-        related_name='children'
+        related_name='children',
     )
 
     # Similarity: Symmetrical M2M
