@@ -66,7 +66,9 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
             # 1. Create a temp table to hold the new pairs
             cursor.execute("CREATE TEMP TABLE temp_similarities (f_id INT, t_id INT) ON COMMIT DROP")
-            
+            connection.commit()
+        
+        with connection.cursor() as cursor:
             # 2. Use copy_from to load the temp table fast
             cursor.copy_from(buf, 'temp_similarities', columns=('f_id', 't_id'))
             
@@ -76,4 +78,4 @@ class Command(BaseCommand):
                 SELECT f_id, t_id FROM temp_similarities
                 ON CONFLICT DO NOTHING
             """)
-        connection.commit()
+            connection.commit()
