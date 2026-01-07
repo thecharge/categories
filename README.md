@@ -14,7 +14,7 @@ docker-compose down
 docker system prune --all --volumes
 
 # build and detach , if it fails you may need to run i twice - cold start sometimes messes up the pgsql
-docker-compose up --build -d --force-recreate
+docker-compose up --build -d --force-recreate --remove-orphans
 
 # only first time create super user:
 docker-compose exec web python manage.py createsuperuser # then create the user

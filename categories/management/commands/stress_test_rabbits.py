@@ -64,18 +64,13 @@ class Command(BaseCommand):
 
         # 4. Psycopg2 Copy (Direct SQL)
         with connection.cursor() as cursor:
-            # 1. Create a temp table to hold the new pairs
-            cursor.execute("CREATE TEMP TABLE temp_similarities (f_id INT, t_id INT) ON COMMIT DROP")
-            connection.commit()
-        
-        with connection.cursor() as cursor:
-            # 2. Use copy_from to load the temp table fast
-            cursor.copy_from(buf, 'temp_similarities', columns=('f_id', 't_id'))
-            
-            # 3. Idempotent move from Temp to Real table
-            cursor.execute("""
-                INSERT INTO categories_category_similar_categories (from_category_id, to_category_id)
-                SELECT f_id, t_id FROM temp_similarities
-                ON CONFLICT DO NOTHING
-            """)
-            connection.commit()
+            cursor.cursor.copy_from(
+                buf, 
+                'categories_category_similar_categories', 
+                columns=('from_category_id', 'to_category_id')
+            )
+        connection.commit()
+
+        self.stdout.write(self.style.SUCCESS(
+            f"Success! Total time: {time.time() - start_time:.2f}s"
+        ))
