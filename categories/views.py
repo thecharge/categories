@@ -6,6 +6,9 @@ from .models import Category
 from .serializers import CategoryDetailSerializer, CategorySerializer
 from rest_framework.pagination import PageNumberPagination
 
+from django.shortcuts import render
+from django.contrib.admin.views.decorators import staff_member_required
+
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 50
     page_size_query_param = 'page_size'
@@ -116,3 +119,14 @@ class CategoryViewSet(viewsets.ModelViewSet):
         if request.method == 'DELETE':
             category.similar_categories.remove(target)
             return Response({"status": "unlinked"}, status=status.HTTP_204_NO_CONTENT)
+
+
+# A special "Admin-like" view to see the diagram
+@staff_member_required
+def admin_tree_view(request):
+    """
+    Renders a D3.js or simple HTML list of the hierarchy
+    """
+    # Optimized fetch of just the structure
+    categories = Category.objects.all().values('id', 'name', 'parent_id')
+    return render(request, 'admin/category_tree.html', {'categories': list(categories)})
