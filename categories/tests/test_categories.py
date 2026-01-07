@@ -51,7 +51,19 @@ class TestCategoryAPI:
         assert response.status_code == status.HTTP_200_OK
         child.refresh_from_db()
         assert child.parent == root2
-
+    
+    @pytest.mark.django_db
+    def test_circular_dependency_fails(api_client):
+        a = Category.objects.create(name="A")
+        b = Category.objects.create(name="B", parent=a)
+        
+        # Try to make A the child of B
+        url = reverse('category-move', kwargs={'pk': a.id})
+        response = api_client.patch(url, {'parent_id': b.id}, format='json')
+        
+        assert response.status_code == 400
+        assert "Circular dependency" in response.data['error']
+        
     def test_rabbit_hole_algorithm(self):
         """
         Task: Shortest sequence from A to B visiting similar categories.

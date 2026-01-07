@@ -69,11 +69,22 @@ class CategoryViewSet(viewsets.ModelViewSet):
         ),
         responses={200: CategorySerializer}
     )
+
     @decorators.action(detail=True, methods=['patch'])
     def move(self, request, pk=None):
         category = self.get_object()
-        category.parent_id = request.data.get('parent_id')
-        category.save()
+        new_parent_id = request.data.get('parent_id')
+
+        # If it's already there, do nothing (Idempotent)
+        if category.parent_id == new_parent_id:
+            return Response(CategorySerializer(category).data)
+
+        try:
+            category.parent_id = new_parent_id
+            category.save() # This triggers the clean() method we added above
+        except ValidationError as e:
+            return Response({"error": e.message}, status=400)
+
         return Response(CategorySerializer(category).data)
 
     @extend_schema(
