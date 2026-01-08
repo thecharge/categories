@@ -31,12 +31,8 @@ class Command(BaseCommand):
         def generate_csv():
             for a, b in itertools.combinations(ids, 2):
                 yield f"{a}\t{b}\n"
-                # Also create the reverse link if your logic treats it as directed, 
-                # but typically undirected graphs store one pair. 
-                # If directed, yield f"{b}\t{a}\n" too.
 
         # 4. Direct Copy into Postgres
-        # We define a helper to read from the generator
         class StringIteratorIO(io.TextIOBase):
             def __init__(self, iter):
                 self._iter = iter
