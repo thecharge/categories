@@ -1,4 +1,5 @@
 from django.db import models
+from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
 class Category(models.Model):
@@ -35,9 +36,10 @@ class Category(models.Model):
                     raise ValidationError("Circular dependency detected in category tree.")
                 curr = curr.parent
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         self.full_clean()
-        super().save(*args, **kwargs)
+        super().save(*args, **kwargs) # This will lock the table for writes
 
     def __str__(self):
         return self.name
