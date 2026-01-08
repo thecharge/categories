@@ -40,6 +40,13 @@ docker-compose exec web python manage.py clear_categories
 # test the 200k 
 docker-compose exec web python manage.py stress_test_rabbits
 
+
+# test for the every for every category
+docker-compose exec web python manage.py case_every_to_every
+
+# test for the edge
+docker-compose exec web python manage.py case_edge
+
 # when needed execute the analyze script
 docker-compose exec web python manage.py analyze_rabbits
 

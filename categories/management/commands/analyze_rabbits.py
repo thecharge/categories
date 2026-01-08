@@ -17,27 +17,26 @@ class Command(BaseCommand):
         islands = list(nx.connected_components(G))
         self.stdout.write(f"Islands: {len(islands)}")
 
-        # 3. Find the Longest Rabbit Hole
-        if islands:
-            largest_island = max(islands, key=len)
-            S = G.subgraph(largest_island)
-            
-            # 2-Pass BFS (Extreme point to extreme point)
-            # This is O(V+E) - lightning fast even for huge graphs
-            source_node = list(largest_island)[0]
-            
-            # Pass 1: Find node u furthest from a random point
+        global_max_dist = 0
+        best_path = []
+
+       # 3. Checking each island
+        for island in islands:
+            S = G.subgraph(island)
+            source_node = list(island)[0]
+
+            # Pass 1
             u = max(nx.single_source_shortest_path_length(S, source_node).items(), key=lambda x: x[1])[0]
             
-            # Pass 2: Find node v furthest from u
+            # Pass 2
             distances = nx.single_source_shortest_path_length(S, u)
             v, max_dist = max(distances.items(), key=lambda x: x[1])
             
-            path = nx.shortest_path(S, source=u, target=v)
-            
-            # Resolve names for output
-            names = Category.objects.in_bulk(path)
-            path_names = [names[nid].name for nid in path]
+            if max_dist > global_max_dist:
+                global_max_dist = max_dist
+                best_path = nx.shortest_path(S, source=u, target=v)
 
-            self.stdout.write(self.style.SUCCESS(f"\nLongest Rabbit Hole found in {time.time() - start_time:.2f}s"))
-            self.stdout.write(f"Hole: {' -> '.join(path_names)} ({max_dist} steps)")
+        names = Category.objects.in_bulk(best_path)
+        path_names = [names[nid].name for nid in best_path]
+        self.stdout.write(self.style.SUCCESS(f"\nLongest Rabbit Hole found in {time.time() - start_time:.2f}s"))
+        self.stdout.write(f"Hole: {' -> '.join(path_names)} ({max_dist} steps)")
